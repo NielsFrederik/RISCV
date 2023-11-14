@@ -42,7 +42,7 @@
 
 int main() {
     readFile_t myFile;
-    const char* inputFilePath = "N:/Downloads/bool.bin";
+    const char* inputFilePath = "N:/Downloads/shift.bin";
 
     if (fetchData(inputFilePath, &myFile) == 0) {
        // Successfully fetched the data
@@ -64,7 +64,6 @@ int main() {
 	CPU_t CPU;
 	initCPU(&CPU);
 
-	//int testvalues[] = myFile.data;
 
 	printf("Initialized registers: \n");
 	for(int i=0; i < 32; i++){

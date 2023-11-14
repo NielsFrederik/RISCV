@@ -39,9 +39,11 @@ int ALU(CPU_t* CPU, int testvalue){
 					break;
 				case 2:
 					//slti
+					CPU->regs[rd] = (CPU->regs[rs1]-imm_I)<0? 1:0;
 					break;
 				case 3:
 					//sltiu
+					CPU->regs[rd] = (CPU->regs[rs1]) < (imm_I) ? 1:0;
 					break;
 
 				case 4:
@@ -53,9 +55,10 @@ int ALU(CPU_t* CPU, int testvalue){
 					switch (funct7){
 						case 0:
 							//srli
-							break;
+							CPU->regs[rd] = CPU->regs[rs1]>>imm_I;
 						case 32:
 							//srai
+							CPU->regs[rd] =(signed int) CPU->regs[rs1] >> imm_I;
 							break;
 						default:
 							break;
@@ -89,8 +92,24 @@ int ALU(CPU_t* CPU, int testvalue){
 		case 0b0110011:
 			switch (funct3){
 				case 0:
-					//add
-					CPU->regs[rd] = CPU->regs[rs1] + CPU->regs[rs2];
+					//add & sub
+					switch(funct7){
+						case 0: //
+							CPU->regs[rd] = CPU->regs[rs1] + CPU->regs[rs2];
+							break;
+						case 0b0100000:
+							CPU->regs[rd] = CPU->regs[rs1] - CPU->regs[rs2];
+							break;
+					}
+
+					break;
+				case 0b010:
+					//slt
+					CPU->regs[rd] = (CPU->regs[rs1]<CPU->regs[rs2])? 1:0;
+					break;
+				case 0b011:
+					//sltu
+					CPU->regs[rd] = (CPU->regs[rs1]) < (CPU->regs[rs2]) ? 1:0;
 					break;
 				case 0b100:
 					//xor
