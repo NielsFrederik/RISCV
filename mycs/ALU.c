@@ -8,7 +8,7 @@
 #include "ALU.h"
 #include "stdio.h"
 
-void ALU(CPU_t* CPU, int testvalue){
+int ALU(CPU_t* CPU, int testvalue){
 
 	int inst = testvalue;
 
@@ -46,6 +46,7 @@ void ALU(CPU_t* CPU, int testvalue){
 
 				case 4:
 					//xori
+					CPU->regs[rd] = CPU->regs[rs1] ^ imm_I;
 					break;
 
 				case 5:
@@ -63,10 +64,12 @@ void ALU(CPU_t* CPU, int testvalue){
 
 				case 6:
 					//ori
+					CPU->regs[rd] = CPU->regs[rs1] | imm_I;
 					break;
 
 				case 7:
 					//andi
+					CPU->regs[rd] = CPU->regs[rs1] & imm_I;
 					break;
 				default:
 					//printf("du grim");
@@ -86,7 +89,18 @@ void ALU(CPU_t* CPU, int testvalue){
 		case 0b0110011:
 			switch (funct3){
 				case 0:
+					//add
 					CPU->regs[rd] = CPU->regs[rs1] + CPU->regs[rs2];
+					break;
+				case 0b100:
+					//xor
+					CPU->regs[rd] = CPU->regs[rs1] ^ CPU->regs[rs2];
+					break;
+				case 0b110://or
+					CPU->regs[rd] = CPU->regs[rs1] | CPU->regs[rs2];
+					break;
+					case 0b111://add
+					CPU->regs[rd] = CPU->regs[rs1] & CPU->regs[rs2];
 					break;
 			}
 			break;
@@ -94,10 +108,12 @@ void ALU(CPU_t* CPU, int testvalue){
 			switch (funct3){
 				case 0:
 					printf("Program exited with code: 0 \n");
+					return 0;
 					break;
 			}
 			break;
 
 	}
+	return 1;
 }
 

@@ -10,6 +10,6 @@
 
 #include <stdint.h>
 
-void ALU(CPU_t* CPU, int testvalue);
+int ALU(CPU_t* CPU, int testvalue);
 
 #endif /* ALU_H_ */

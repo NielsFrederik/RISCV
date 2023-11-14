@@ -42,7 +42,7 @@
 
 int main() {
     readFile_t myFile;
-    const char* inputFilePath = "N:/Downloads/addlarge.bin";
+    const char* inputFilePath = "N:/Downloads/bool.bin";
 
     if (fetchData(inputFilePath, &myFile) == 0) {
        // Successfully fetched the data
@@ -70,14 +70,16 @@ int main() {
 	for(int i=0; i < 32; i++){
 		printf("Reg%d %08x\n", i , CPU.regs[i]);
 	}
-
-	for (int j=0; j<7; j++){
+	int runner =1;
+	int j =0;
+	while(runner){
 	printf("After instruction:%d \n", j);
-	ALU(&CPU, myFile.data[j]);
+	runner=ALU(&CPU, myFile.data[j]);
 	printf("Initialized registers: \n");
 		for(int i=0; i < 32; i++){
 			printf("Reg%d %08x\n", i , CPU.regs[i]);
 		}
+	j++;
 	}
 
     return 0;
