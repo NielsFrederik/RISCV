@@ -10,6 +10,7 @@
 
 int ALU(CPU_t* CPU, int testvalue){
 
+	CPU->regs[0] = 0;
 	int inst = testvalue;
 
 	int opcode = inst & 0b1111111;
@@ -19,11 +20,11 @@ int ALU(CPU_t* CPU, int testvalue){
 	int rs2 = (inst >> 20) & 0b11111;
 
 	int imm_I = (inst >> 20);
-	int imm_S = (signed int)(inst >>25)+(unsigned int)((inst&0b00000000000000000000111110000000)>>7);
+	int imm_S = (signed int)((inst >>25)&0b11111111111111111111111111100000)|(unsigned int)((inst&0b00000000000000000000111110000000)>>7);
 	//int imm_B = ((inst & 0x80000000) >> 19) | ((inst & 0x80) << 4) | ((inst >> 20) & 0x7e0) | ((inst >> 7 ) & 0x1e) ;
 	//int imm_J = ((inst & 0x80000000) >> 11) | ((inst & 0xff000)) | ((inst >> 9) & 0x800) | ((inst >> 20 ) & 0x7f3) ;
 	int imm_U = (inst & 0b11111111111111111111000000000000);
-	int imm_UJ= (signed int)((inst&0b10000000000000000000000000000000)>>11)+(unsigned int)((inst&0b01111111111000000000000000000000)>>20)+(unsigned int)((inst&0b00000000000100000000000000000000)>>10)+(unsigned int)((inst&0b0000000000001111111100000000000));
+	int imm_UJ= ((signed int)(inst&0b10000000000000000000000000000000)>>15)|(signed int)((inst&0b01111111111000000000000000000000)>>20)|(signed int)((inst&0b00000000000100000000000000000000)>>9)|(signed int)((inst&0b000000000000111111110000000000));
 	int imm_SB = (((signed int)(inst&0b10000000000000000000000000000000)>>19)+((unsigned int)(inst&0b01111110000000000000000000000000)>>20)+((unsigned int)(inst&0b00000000000000000000111100000000)>>7)+((unsigned int)(inst&0b00000000000000000000000010000000)<<4));
 
 	int funct3 = (inst >> 12) & 0x7 ;
@@ -40,7 +41,7 @@ int ALU(CPU_t* CPU, int testvalue){
 					CPU->regs[rd]= ((CPU->mem[CPU->regs[rs1]+imm_I])<<7) + ((CPU->mem[CPU->regs[rs1]+imm_I+1]));
 					break;
 				case 0b010: //lw
-					CPU->regs[rd]= ((CPU->mem[CPU->regs[rs1]+imm_I])<<23) + ((CPU->mem[CPU->regs[rs1]+imm_I+1])<<15)+((CPU->mem[CPU->regs[rs1]+imm_I+2])<<7) + (CPU->mem[CPU->regs[rs1]+imm_I+4]);
+					CPU->regs[rd]= ((CPU->mem[CPU->regs[rs1]+imm_I+3])<<23) + ((CPU->mem[CPU->regs[rs1]+imm_I+2])<<15)+((CPU->mem[CPU->regs[rs1]+imm_I+1])<<7) + (CPU->mem[CPU->regs[rs1]+imm_I+0]);
 			}
 			break;
 		case 0b0010011: //Opcode
@@ -96,8 +97,6 @@ int ALU(CPU_t* CPU, int testvalue){
 		}
 		break;
 
-		default:
-			//printf("du grim");
 		break;
 		case 0b0100011: //S opcode
 			switch(funct3){
@@ -110,9 +109,9 @@ int ALU(CPU_t* CPU, int testvalue){
 					break;
 				case 0b010://sw
 					CPU->mem[CPU->regs[rs1]+imm_S]=CPU->regs[rs2]&  0b00000000000000000000000011111111;
-					CPU->mem[CPU->regs[rs1]+imm_S+1]=CPU->regs[rs2]&0b00000000000000001111111100000000;
-					CPU->mem[CPU->regs[rs1]+imm_S+2]=CPU->regs[rs2]&0b00000000111111110000000000000000;
-					CPU->mem[CPU->regs[rs1]+imm_S+3]=CPU->regs[rs2]&0b11111111000000000000000000000000;
+					CPU->mem[CPU->regs[rs1]+imm_S+1]=(CPU->regs[rs2]&0b00000000000000001111111100000000)>>8;
+					CPU->mem[CPU->regs[rs1]+imm_S+2]=(CPU->regs[rs2]&0b00000000111111110000000000000000)>>16;
+					CPU->mem[CPU->regs[rs1]+imm_S+3]=(CPU->regs[rs2]&0b11111111000000000000000000000000)>>24;
 					break;
 			}
 			break;
@@ -176,6 +175,8 @@ int ALU(CPU_t* CPU, int testvalue){
 					CPU->pc = CPU->regs[rs1] != CPU->regs[rs2]? CPU->pc+(imm_SB/4)-1 : CPU->pc;
 					break;
 				case 0b100: //blt
+					if((signed int)CPU->regs[rs1] >= (signed int)CPU->regs[rs2] )
+						printf("u exit branching");
 					CPU->pc = (signed int)CPU->regs[rs1] < (signed int)CPU->regs[rs2]? CPU->pc+(imm_SB/4)-1 : CPU->pc;
 					break;
 				case 0b101: //bge
@@ -189,7 +190,13 @@ int ALU(CPU_t* CPU, int testvalue){
 					break;
 			}
 			break;
-		case 0b1101111:
+		case 0b1100111: //jalr
+			printf("jalrjalrjalrjalrjalrjalrjalr \n");
+			CPU->regs[rd]	=CPU->pc+1;
+			CPU->pc 		=CPU->regs[rs1]+(imm_I/4)-1;
+			break;
+
+		case 0b1101111: //jal
 			CPU->regs[rd] = CPU->pc+1;
 			CPU->pc		  = CPU->pc+(imm_UJ/4)-1;
 			break;
@@ -201,6 +208,9 @@ int ALU(CPU_t* CPU, int testvalue){
 					return 0;
 					break;
 			}
+			break;
+		default:
+			printf("no opcode found \n");
 			break;
 
 	}
