@@ -42,7 +42,7 @@
 
 int main() {
     readFile_t myFile;
-    const char* inputFilePath = "N:/Downloads/branchcnt.bin";
+    const char* inputFilePath = "N:/Downloads/loop.bin";
 
     if (fetchData(inputFilePath, &myFile) == 0) {
        // Successfully fetched the data

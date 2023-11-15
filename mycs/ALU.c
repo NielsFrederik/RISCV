@@ -19,16 +19,30 @@ int ALU(CPU_t* CPU, int testvalue){
 	int rs2 = (inst >> 20) & 0b11111;
 
 	int imm_I = (inst >> 20);
+	int imm_S = (signed int)(inst >>25)+(unsigned int)((inst&0b00000000000000000000111110000000)>>7);
 	//int imm_B = ((inst & 0x80000000) >> 19) | ((inst & 0x80) << 4) | ((inst >> 20) & 0x7e0) | ((inst >> 7 ) & 0x1e) ;
 	//int imm_J = ((inst & 0x80000000) >> 11) | ((inst & 0xff000)) | ((inst >> 9) & 0x800) | ((inst >> 20 ) & 0x7f3) ;
-	int imm_U = ((inst & 0b11111111111111111111000000000000));
-	int imm_S = (((signed int)(inst&0b10000000000000000000000000000000)>>19)+((unsigned int)(inst&0b01111110000000000000000000000000)>>20)+((unsigned int)(inst&0b00000000000000000000111100000000)>>7)+((unsigned int)(inst&0b00000000000000000000000010000000)<<4));//+ 0b11111111111111111110000000000000;
+	int imm_U = (inst & 0b11111111111111111111000000000000);
+	int imm_UJ= (signed int)((inst&0b10000000000000000000000000000000)>>11)+(unsigned int)((inst&0b01111111111000000000000000000000)>>20)+(unsigned int)((inst&0b00000000000100000000000000000000)>>10)+(unsigned int)((inst&0b0000000000001111111100000000000));
+	int imm_SB = (((signed int)(inst&0b10000000000000000000000000000000)>>19)+((unsigned int)(inst&0b01111110000000000000000000000000)>>20)+((unsigned int)(inst&0b00000000000000000000111100000000)>>7)+((unsigned int)(inst&0b00000000000000000000000010000000)<<4));
 
 	int funct3 = (inst >> 12) & 0x7 ;
 	int funct7 = (inst >> 25) & 0x7f;
 
 
 	switch (opcode) {
+		case 0b0000011:
+			switch (funct3) {
+				case 0b000: //lb
+					CPU->regs[rd]= CPU->mem[CPU->regs[rs1]+imm_I];
+					break;
+				case 0b001: //lh
+					CPU->regs[rd]= ((CPU->mem[CPU->regs[rs1]+imm_I])<<7) + ((CPU->mem[CPU->regs[rs1]+imm_I+1]));
+					break;
+				case 0b010: //lw
+					CPU->regs[rd]= ((CPU->mem[CPU->regs[rs1]+imm_I])<<23) + ((CPU->mem[CPU->regs[rs1]+imm_I+1])<<15)+((CPU->mem[CPU->regs[rs1]+imm_I+2])<<7) + (CPU->mem[CPU->regs[rs1]+imm_I+4]);
+			}
+			break;
 		case 0b0010011: //Opcode
 			switch (funct3) {
 				case 0: //addi
@@ -85,9 +99,22 @@ int ALU(CPU_t* CPU, int testvalue){
 		default:
 			//printf("du grim");
 		break;
-
-		case 0b0110111:
-			CPU->regs[rd] = imm_U;
+		case 0b0100011: //S opcode
+			switch(funct3){
+				case 0b000://sb
+					CPU->mem[CPU->regs[rs1]+imm_S]=CPU->regs[rs2]&0b00000000000000000000000011111111;
+					break;
+				case 0b001://sh
+					CPU->mem[CPU->regs[rs1]+imm_S]=CPU->regs[rs2]&  0b00000000000000000000000011111111;
+					CPU->mem[CPU->regs[rs1]+imm_S+1]=CPU->regs[rs2]&0b00000000000000001111111100000000;
+					break;
+				case 0b010://sw
+					CPU->mem[CPU->regs[rs1]+imm_S]=CPU->regs[rs2]&  0b00000000000000000000000011111111;
+					CPU->mem[CPU->regs[rs1]+imm_S+1]=CPU->regs[rs2]&0b00000000000000001111111100000000;
+					CPU->mem[CPU->regs[rs1]+imm_S+2]=CPU->regs[rs2]&0b00000000111111110000000000000000;
+					CPU->mem[CPU->regs[rs1]+imm_S+3]=CPU->regs[rs2]&0b11111111000000000000000000000000;
+					break;
+			}
 			break;
 		case 0b0110011:
 			switch (funct3){
@@ -137,18 +164,38 @@ int ALU(CPU_t* CPU, int testvalue){
 					break;
 			}
 			break;
+		case 0b0110111: //U opcode
+			CPU->regs[rd] = imm_U;
+			break;
 		case 0b1100011:
 			switch(funct3){
+				case 0b000: //beq
+					CPU->pc = CPU->regs[rs1] == CPU->regs[rs2]? CPU->pc+(imm_SB/4)-1 : CPU->pc;
+					break;
 				case 0b001: //bne
-					CPU->pc = CPU->regs[rs1] != CPU->regs[rs2]? CPU->pc+(imm_S/4)-1 : CPU->pc;
+					CPU->pc = CPU->regs[rs1] != CPU->regs[rs2]? CPU->pc+(imm_SB/4)-1 : CPU->pc;
 					break;
 				case 0b100: //blt
-					CPU->pc = CPU->regs[rs1] < CPU->regs[rs2]? CPU->pc+(imm_S/4)-1 : CPU->pc;
+					CPU->pc = (signed int)CPU->regs[rs1] < (signed int)CPU->regs[rs2]? CPU->pc+(imm_SB/4)-1 : CPU->pc;
+					break;
+				case 0b101: //bge
+					CPU->pc = (signed int)CPU->regs[rs1] >= (signed int)CPU->regs[rs2]? CPU->pc+(imm_SB/4)-1 : CPU->pc;
+					break;
+				case 0b110: //bltu
+					CPU->pc = (unsigned int)CPU->regs[rs1] < (unsigned int)CPU->regs[rs2]? CPU->pc+(imm_SB/4)-1 : CPU->pc;
+					break;
+				case 0b111: //bgeu
+					CPU->pc = (unsigned int)CPU->regs[rs1] >= (unsigned int)CPU->regs[rs2]? CPU->pc+(imm_SB/4)-1 : CPU->pc;
 					break;
 			}
 			break;
+		case 0b1101111:
+			CPU->regs[rd] = CPU->pc+1;
+			CPU->pc		  = CPU->pc+(imm_UJ/4)-1;
+			break;
+
 		case 0b1110011:
-			switch (funct3){
+			switch (funct3){ //ecall
 				case 0:
 					printf("Program exited with code: 0 \n");
 					return 0;
