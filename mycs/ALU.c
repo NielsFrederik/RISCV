@@ -22,7 +22,7 @@ int ALU(CPU_t* CPU, int testvalue){
 	//int imm_B = ((inst & 0x80000000) >> 19) | ((inst & 0x80) << 4) | ((inst >> 20) & 0x7e0) | ((inst >> 7 ) & 0x1e) ;
 	//int imm_J = ((inst & 0x80000000) >> 11) | ((inst & 0xff000)) | ((inst >> 9) & 0x800) | ((inst >> 20 ) & 0x7f3) ;
 	int imm_U = ((inst & 0b11111111111111111111000000000000));
-	//int imm_S = ((inst & 0xfe000000 >> 20)) | ((inst >> 7) & 0x1f);
+	int imm_S = (((unsigned int)(inst&0b10000000000000000000000000000000)>>19)+((unsigned int)(inst&0b01111110000000000000000000000000)>>20)+((unsigned int)(inst&0b00000000000000000000111100000000)>>7)+((unsigned int)(inst&0b00000000000000000000000010000000)<<4))+ 0b11111111111111111110000000000000;
 
 	int funct3 = (inst >> 12) & 0x7 ;
 	int funct7 = (inst >> 25) & 0x7f;
@@ -55,8 +55,9 @@ int ALU(CPU_t* CPU, int testvalue){
 					switch (funct7){
 						case 0:
 							//srli
-							CPU->regs[rd] = CPU->regs[rs1]>>imm_I;
-						case 32:
+							CPU->regs[rd] = CPU->regs[rs1] >> imm_I ;
+							break;
+						case 0b0100000:
 							//srai
 							CPU->regs[rd] =(signed int) CPU->regs[rs1] >> imm_I;
 							break;
@@ -79,7 +80,6 @@ int ALU(CPU_t* CPU, int testvalue){
 					break;
 
 		}
-
 		break;
 
 		default:
@@ -101,8 +101,12 @@ int ALU(CPU_t* CPU, int testvalue){
 							CPU->regs[rd] = CPU->regs[rs1] - CPU->regs[rs2];
 							break;
 					}
-
 					break;
+
+				case 0b001: //sll
+					CPU->regs[rd]= CPU->regs[rs1] << CPU->regs[rs2];
+					break;
+
 				case 0b010:
 					//slt
 					CPU->regs[rd] = (CPU->regs[rs1]<CPU->regs[rs2])? 1:0;
@@ -115,11 +119,31 @@ int ALU(CPU_t* CPU, int testvalue){
 					//xor
 					CPU->regs[rd] = CPU->regs[rs1] ^ CPU->regs[rs2];
 					break;
+				case 0b101:
+					switch(funct7){
+					case 0b0000000: //srl
+						CPU->regs[rd] = CPU->regs[rs1] >> CPU->regs[rs2];
+						break;
+					case 0b0100000: //sra
+						CPU->regs[rd] = (signed int) CPU->regs[rs1] >> CPU->regs[rs2];
+						break;
+					}
+					break;
 				case 0b110://or
 					CPU->regs[rd] = CPU->regs[rs1] | CPU->regs[rs2];
 					break;
-					case 0b111://add
+					case 0b111://and
 					CPU->regs[rd] = CPU->regs[rs1] & CPU->regs[rs2];
+					break;
+			}
+			break;
+		case 0b1100011:
+			switch(funct3){
+				case 0b001: //bne
+					CPU->pc = CPU->regs[rs1] != CPU->regs[rs2]? CPU->pc+(imm_S/4)-1 : CPU->pc;
+					break;
+				case 0b100: //blt
+					CPU->pc = CPU->regs[rs1] < CPU->regs[rs2]? CPU->pc+(imm_S/4)-1 : CPU->pc;
 					break;
 			}
 			break;

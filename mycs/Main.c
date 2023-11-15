@@ -42,7 +42,7 @@
 
 int main() {
     readFile_t myFile;
-    const char* inputFilePath = "N:/Downloads/shift.bin";
+    const char* inputFilePath = "N:/Downloads/branchcnt.bin";
 
     if (fetchData(inputFilePath, &myFile) == 0) {
        // Successfully fetched the data
@@ -70,15 +70,18 @@ int main() {
 		printf("Reg%d %08x\n", i , CPU.regs[i]);
 	}
 	int runner =1;
-	int j =0;
 	while(runner){
-	printf("After instruction:%d \n", j);
-	runner=ALU(&CPU, myFile.data[j]);
-	printf("Initialized registers: \n");
-		for(int i=0; i < 32; i++){
-			printf("Reg%d %08x\n", i , CPU.regs[i]);
+	printf("After instruction:%d \n", CPU.pc);
+	if (CPU.pc>=0 && CPU.pc<myFile.size)
+		runner=ALU(&CPU, myFile.data[CPU.pc]);
+	else{
+		printf("index out of bounds bro %d", CPU.pc);
+		return 0;
+	}
+	for(int i=0; i < 32; i++){
+		printf("Reg%d %08x\n", i , CPU.regs[i]);
 		}
-	j++;
+	CPU.pc+=1;
 	}
 
     return 0;
