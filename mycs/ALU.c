@@ -20,7 +20,7 @@ int ALU(CPU_t* CPU, int testvalue){
 	int rs2 = (inst >> 20) & 0b11111;
 
 	int imm_I = (inst >> 20);
-	int imm_S = (signed int)((inst >>25)&0b11111111111111111111111111100000)|(unsigned int)((inst&0b00000000000000000000111110000000)>>7);
+	int imm_S = (signed int)((inst >>20)&0b11111111111111111111111111100000)|(unsigned int)((inst&0b00000000000000000000111110000000)>>7);
 	//int imm_B = ((inst & 0x80000000) >> 19) | ((inst & 0x80) << 4) | ((inst >> 20) & 0x7e0) | ((inst >> 7 ) & 0x1e) ;
 	//int imm_J = ((inst & 0x80000000) >> 11) | ((inst & 0xff000)) | ((inst >> 9) & 0x800) | ((inst >> 20 ) & 0x7f3) ;
 	int imm_U = (inst & 0b11111111111111111111000000000000);
@@ -38,10 +38,14 @@ int ALU(CPU_t* CPU, int testvalue){
 					CPU->regs[rd]= CPU->mem[CPU->regs[rs1]+imm_I];
 					break;
 				case 0b001: //lh
-					CPU->regs[rd]= ((CPU->mem[CPU->regs[rs1]+imm_I])<<7) + ((CPU->mem[CPU->regs[rs1]+imm_I+1]));
+					CPU->regs[rd]= ((CPU->mem[CPU->regs[rs1]+imm_I])<<8) + ((CPU->mem[CPU->regs[rs1]+imm_I+1]));
 					break;
 				case 0b010: //lw
-					CPU->regs[rd]= ((CPU->mem[CPU->regs[rs1]+imm_I+3])<<23) + ((CPU->mem[CPU->regs[rs1]+imm_I+2])<<15)+((CPU->mem[CPU->regs[rs1]+imm_I+1])<<7) + (CPU->mem[CPU->regs[rs1]+imm_I+0]);
+					if(CPU->regs[rs1]+imm_I<0  || CPU->regs[rs1]+imm_I > 0x100005){
+						printf("out of bounds lw bro");
+						return 1;
+					}
+					CPU->regs[rd]= ((CPU->mem[CPU->regs[rs1]+imm_I+3])<<24) + ((CPU->mem[CPU->regs[rs1]+imm_I+2])<<16)+((CPU->mem[CPU->regs[rs1]+imm_I+1])<<8) + (CPU->mem[CPU->regs[rs1]+imm_I+0]);
 			}
 			break;
 		case 0b0010011: //Opcode
@@ -49,7 +53,7 @@ int ALU(CPU_t* CPU, int testvalue){
 				case 0: //addi
 					CPU->regs[rd] = CPU->regs[rs1] + imm_I;
 					break;
-				case 1: //slii
+				case 1: //slli
 					CPU->regs[rd] = CPU->regs[rs1]<< imm_I;
 					break;
 				case 2:
@@ -108,6 +112,13 @@ int ALU(CPU_t* CPU, int testvalue){
 					CPU->mem[CPU->regs[rs1]+imm_S+1]=CPU->regs[rs2]&0b00000000000000001111111100000000;
 					break;
 				case 0b010://sw
+					if(CPU->regs[rs1]+imm_S<0  || CPU->regs[rs1]+imm_S > 1048576){
+						printf("out of bounds v2 bro");
+						return 0;
+					}
+					if(CPU->regs[rs2] == 99)
+						printf("u at 99");
+
 					CPU->mem[CPU->regs[rs1]+imm_S]=CPU->regs[rs2]&  0b00000000000000000000000011111111;
 					CPU->mem[CPU->regs[rs1]+imm_S+1]=(CPU->regs[rs2]&0b00000000000000001111111100000000)>>8;
 					CPU->mem[CPU->regs[rs1]+imm_S+2]=(CPU->regs[rs2]&0b00000000111111110000000000000000)>>16;
@@ -120,7 +131,7 @@ int ALU(CPU_t* CPU, int testvalue){
 				case 0:
 					//add & sub
 					switch(funct7){
-						case 0: //
+						case 0: //add
 							CPU->regs[rd] = CPU->regs[rs1] + CPU->regs[rs2];
 							break;
 						case 0b0100000:
@@ -135,11 +146,11 @@ int ALU(CPU_t* CPU, int testvalue){
 
 				case 0b010:
 					//slt
-					CPU->regs[rd] = (CPU->regs[rs1]<CPU->regs[rs2])? 1:0;
+					CPU->regs[rd] = (CPU->regs[rs1]<CPU->regs[rs2])? 1:0; //de kan da ikke være det samme
 					break;
 				case 0b011:
 					//sltu
-					CPU->regs[rd] = (CPU->regs[rs1]) < (CPU->regs[rs2]) ? 1:0;
+					CPU->regs[rd] = (CPU->regs[rs1]) < (CPU->regs[rs2]) ? 1:0; //her
 					break;
 				case 0b100:
 					//xor

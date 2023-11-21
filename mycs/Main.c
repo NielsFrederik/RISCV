@@ -6,43 +6,10 @@
 #include "ALU.h"
 
 
-/*int main() {
-
-	CPU_t CPU;
-	initCPU(&CPU);
-	int opcode	= 0b0010011;
-	int rd	 	= 0b00001<<7;
-	int f3		= 0b001<<12;
-	int rs1		= 0b00001<<15;
-	int imm		= 0b00000000001<<20;
-	int testvalue = 0x00200093; //adddi 2 reg 2?
-	int testvalue2 = opcode+rd+f3+rs1+imm;
-	int testvalues[] = {testvalue, testvalue2};
-
-	printf("Initialized registers: \n");
-	for(int i=0; i < 4; i++){
-		printf("Reg%d %d\n", i , CPU.regs[i]);
-	}
-
-
-	printf("After a single instruction: \n");
-	ALU(&CPU, testvalues[0]);
-	printf("Initialized registers: \n");
-		for(int i=0; i < 4; i++){
-			printf("Reg%d %d\n", i , CPU.regs[i]);
-		}
-		ALU(&CPU, testvalues[1]);
-		printf("Initialized registers: \n");
-			for(int i=0; i < 4; i++){
-				printf("Reg%d %d\n", i , CPU.regs[i]);
-			}
-	printf("pc is: %d", CPU.pc);
-}
-*/
 
 int main() {
     readFile_t myFile;
-    const char* inputFilePath = "N:/Downloads/loop.bin";
+    const char* inputFilePath = "N:/Downloads/string.bin";
 
     if (fetchData(inputFilePath, &myFile) == 0) {
        // Successfully fetched the data
@@ -70,8 +37,9 @@ int main() {
 		printf("Reg%d %08x\n", i , CPU.regs[i]);
 	}
 	int runner =1;
+	int runcount=0;
 	while(runner){
-	//printf("After instruction:%d \n", CPU.pc);
+	printf("After instruction:%x \n", CPU.pc*4);
 	if (CPU.pc>=0 && CPU.pc<myFile.size)
 		runner=ALU(&CPU, myFile.data[CPU.pc]);
 	else{
@@ -81,6 +49,9 @@ int main() {
 
 
 	CPU.pc+=1;
+	if (runcount ==1288)
+		printf("lets look");
+	runcount+=1;
 	}
 	for(int i=0; i < 32; i++)
 			printf("Reg%d %08x\n", i , CPU.regs[i]);
