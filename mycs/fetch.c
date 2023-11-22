@@ -1,9 +1,3 @@
-/*
- * fetch.c
- *
- *  Created on: 13. nov. 2023
- *      Author: oscar
- */
 
 #include "fetch.h"
 #include <stdio.h>

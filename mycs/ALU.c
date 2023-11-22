@@ -1,9 +1,3 @@
-/*
- * ALU.c
- *
- *  Created on: 13. nov. 2023
- *      Author: oscar
- */
 #include "Typedef2.h"
 #include "ALU.h"
 #include "stdio.h"
@@ -35,13 +29,19 @@ int ALU(CPU_t* CPU, int testvalue){
 		case 0b0000011:
 			switch (funct3) {
 				case 0b000: //lb
-					CPU->regs[rd]= CPU->mem[CPU->regs[rs1]+imm_I];
+					CPU->regs[rd]= (signed int)((CPU->mem[CPU->regs[rs1]+imm_I])<<24)>>24;
 					break;
 				case 0b001: //lh
-					CPU->regs[rd]= ((CPU->mem[CPU->regs[rs1]+imm_I])<<8) + ((CPU->mem[CPU->regs[rs1]+imm_I+1]));
+					CPU->regs[rd]= ((signed int)((CPU->mem[CPU->regs[rs1]+imm_I+1])<<24)>>16) | ((CPU->mem[CPU->regs[rs1]+imm_I]));
 					break;
 				case 0b010: //lw
 					CPU->regs[rd]= ((CPU->mem[CPU->regs[rs1]+imm_I+3])<<24) + ((CPU->mem[CPU->regs[rs1]+imm_I+2])<<16)+((CPU->mem[CPU->regs[rs1]+imm_I+1])<<8) + (CPU->mem[CPU->regs[rs1]+imm_I+0]);
+					break;
+				case 0b100: //lbu
+					CPU->regs[rd]= CPU->mem[CPU->regs[rs1]+imm_I];
+					break;
+				case 0b101: //lhu
+					CPU->regs[rd]= ((CPU->mem[CPU->regs[rs1]+imm_I+1])<<8) | ((CPU->mem[CPU->regs[rs1]+imm_I]));
 			}
 			break;
 		case 0b0010011: //Opcode
@@ -91,7 +91,6 @@ int ALU(CPU_t* CPU, int testvalue){
 					CPU->regs[rd] = CPU->regs[rs1] & imm_I;
 					break;
 				default:
-					//printf("du grim");
 					break;
 
 		}
@@ -105,16 +104,9 @@ int ALU(CPU_t* CPU, int testvalue){
 					break;
 				case 0b001://sh
 					CPU->mem[CPU->regs[rs1]+imm_S]=CPU->regs[rs2]&  0b00000000000000000000000011111111;
-					CPU->mem[CPU->regs[rs1]+imm_S+1]=CPU->regs[rs2]&0b00000000000000001111111100000000;
+					CPU->mem[CPU->regs[rs1]+imm_S+1]=(CPU->regs[rs2]&0b00000000000000001111111100000000)>>8;
 					break;
 				case 0b010://sw
-					if(CPU->regs[rs1]+imm_S<0  || CPU->regs[rs1]+imm_S > 1048576){
-						printf("out of bounds v2 bro");
-						return 0;
-					}
-					if(CPU->regs[rs2] == 99)
-						printf("u at 99");
-
 					CPU->mem[CPU->regs[rs1]+imm_S]=CPU->regs[rs2]&  0b00000000000000000000000011111111;
 					CPU->mem[CPU->regs[rs1]+imm_S+1]=(CPU->regs[rs2]&0b00000000000000001111111100000000)>>8;
 					CPU->mem[CPU->regs[rs1]+imm_S+2]=(CPU->regs[rs2]&0b00000000111111110000000000000000)>>16;
@@ -182,8 +174,6 @@ int ALU(CPU_t* CPU, int testvalue){
 					CPU->pc = CPU->regs[rs1] != CPU->regs[rs2]? CPU->pc+(imm_SB/4)-1 : CPU->pc;
 					break;
 				case 0b100: //blt
-					if((signed int)CPU->regs[rs1] >= (signed int)CPU->regs[rs2] )
-						printf("u exit branching");
 					CPU->pc = (signed int)CPU->regs[rs1] < (signed int)CPU->regs[rs2]? CPU->pc+(imm_SB/4)-1 : CPU->pc;
 					break;
 				case 0b101: //bge
@@ -198,7 +188,6 @@ int ALU(CPU_t* CPU, int testvalue){
 			}
 			break;
 		case 0b1100111: //jalr
-			printf("jalrjalrjalrjalrjalrjalrjalr \n");
 			CPU->regs[rd]	=CPU->pc+1;
 			CPU->pc 		=CPU->regs[rs1]+(imm_I/4)-1;
 			break;

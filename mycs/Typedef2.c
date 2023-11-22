@@ -1,10 +1,3 @@
-/*
- * Typedef2.c
- *
- *  Created on: 13. nov. 2023
- *      Author: oscar
- */
-
 #include "Typedef2.h"
 
 

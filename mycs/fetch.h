@@ -1,9 +1,3 @@
-/*
- * fetch.h
- *
- *  Created on: 13. nov. 2023
- *      Author: oscar
- */
 
 #ifndef FETCH_H_
 #define FETCH_H_
