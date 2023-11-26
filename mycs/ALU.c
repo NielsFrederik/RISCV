@@ -1,4 +1,4 @@
-#include "Typedef2.h"
+#include "CPUtype.h"
 #include "ALU.h"
 #include "stdio.h"
 

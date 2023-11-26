@@ -1,9 +1,8 @@
 
-#ifndef TYPEDEF2_H_
-#define TYPEDEF2_H_
+#ifndef CPUtype_H_
+#define CPUtype_H_
 
 #include <stdint.h>
-//#include <Typedef2.c>
 
 typedef struct {
 	uint32_t	pc;
@@ -11,4 +10,4 @@ typedef struct {
 	uint8_t		mem[0x100000];
 } CPU_t;
 
-#endif /* TYPEDEF2_H_ */
+#endif /* CPUtype_H_ */

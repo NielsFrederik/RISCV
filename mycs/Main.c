@@ -1,7 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
-#include "fetch.h"
-#include "Typedef2.h"
+#include "CPUtype.h"
 #include "ALU.h"
 
 
@@ -11,36 +11,40 @@ int main( int argc, char *argv[] ) {
 		printf("file name not supplied");
 		return -1;
 	}
-    readFile_t myFile;
+   // readFile_t myFile;
     const char* inputFilePath = argv[1]; //uses the terminal input as the filename.
+	uint32_t filesize;
+	FILE* inputFile = fopen(inputFilePath, "rb");
+	// Find the size of the file
+        fseek(inputFile, 0, SEEK_END); //puts the file cursor at the end of the file.
+        size_t fileSize = ftell(inputFile); //then puts the cursor position into "fileSize"
+        fseek(inputFile, 0, SEEK_SET);  //puts the cursor back at 0.
 
-    if (fetchData(inputFilePath, &myFile) == 0) {
-       // Successfully fetched the data
+        //adjust for uint32 type is 4 bytes.
+        filesize = fileSize >> 2;
 
-       // Access myFile.data and myFile.size here
-        for (size_t i = 0; i < myFile.size; ++i) {
-
-        }
-
-    } else {
-        // Error handling
-    }
+        // Allocating the array in memory.
+        uint32_t * Data = (uint32_t*)malloc(fileSize);
+		fread(Data, sizeof(uint32_t), filesize, inputFile);
 
 	CPU_t CPU;
-	initCPU(&CPU);
-	if (myFile.size*4<0x100000){ //reading instructions and data into the memory.
-		for(int i=0; i<myFile.size; i++){
-			CPU.mem[(4*i)+0]=myFile.data[i]&0x000000ff;
-			CPU.mem[(4*i)+1]=(myFile.data[i]&0x0000ff00)>>8;
-			CPU.mem[(4*i)+2]=(myFile.data[i]&0x00ff0000)>>16;
-			CPU.mem[(4*i)+3]=(myFile.data[i]&0xff000000)>>24;
+	CPU.pc = 0; //initilzing the CPU.
+	for (int i = 0; i <  32; i++) 
+		CPU.regs[i] = 0;
+	
+	if (filesize*4<0x100000){ //reading instructions and data into the memory.
+		for(int i=0; i<filesize; i++){
+			CPU.mem[(4*i)+0]=Data[i]&0x000000ff;
+			CPU.mem[(4*i)+1]=(Data[i]&0x0000ff00)>>8;
+			CPU.mem[(4*i)+2]=(Data[i]&0x00ff0000)>>16;
+			CPU.mem[(4*i)+3]=(Data[i]&0xff000000)>>24;
 		}
 	}
 
 	int runner =1; //variable to be able to stop the program incase of a ecall 10.
 	while(runner){
-	if (CPU.pc>=0 && CPU.pc<myFile.size) //makes sure it is reading from inside the data array.
-		runner=ALU(&CPU, myFile.data[CPU.pc]); //the ALU takes the instruction as input.
+	if (CPU.pc>=0 && CPU.pc<filesize) //makes sure it is reading from inside the data array.
+		runner=ALU(&CPU, Data[CPU.pc]); //the ALU takes the instruction as input.
 	else{
 		printf("index out of bounds %d", CPU.pc); //if the program counter is outside the valid area the program stops.
 		return 0;
