@@ -43,8 +43,10 @@ int main( int argc, char *argv[] ) {
 
 	int runner =1; //variable to be able to stop the program incase of a ecall 10.
 	while(runner){
-	if (CPU.pc>=0 && CPU.pc<filesize) //makes sure it is reading from inside the data array.
-		runner=ALU(&CPU, Data[CPU.pc]); //the ALU takes the instruction as input.
+	if (CPU.pc>=0 && CPU.pc<filesize){ //makes sure it is reading from inside the data array.
+		uint32_t instruction = CPU.mem[(4*CPU.pc)+0]+(CPU.mem[(4*CPU.pc)+1]<<8)+(CPU.mem[(4*CPU.pc)+2]<<16)+(CPU.mem[(4*CPU.pc)+3]<<24); //reads the instruction from the memory.
+		runner=ALU(&CPU, instruction); //the ALU takes the instruction as input.
+	}
 	else{
 		printf("index out of bounds %d", CPU.pc); //if the program counter is outside the valid area the program stops.
 		return 0;
@@ -58,6 +60,22 @@ int main( int argc, char *argv[] ) {
 			printf("x%d\t= %08x,\t", i+j , CPU.regs[i+j]); //prints all the registers in a a 4X8 matrix.
 		printf("\n");
 	}
+
+	//write all CPU.Regs to a file.res.
+	FILE* outputFile = fopen("file.res", "wb");
+	for(int i=0; i<32; i++){
+		uint32_t temp = CPU.regs[i];
+		uint8_t t1 = temp & 0b11111111;
+		uint8_t t2 = temp>>8 & 0b11111111;
+		uint8_t t3 = temp>>16 & 0b11111111;
+		uint8_t t4 = temp>>24 & 0b11111111;
+		fwrite(&t1, sizeof(uint8_t), 1, outputFile);
+		fwrite(&t2, sizeof(uint8_t), 1, outputFile);
+		fwrite(&t3, sizeof(uint8_t), 1, outputFile);
+		fwrite(&t4, sizeof(uint8_t), 1, outputFile);
+	}
+	fclose(outputFile);
+	//where is the output file?
 
     return 0;
 }

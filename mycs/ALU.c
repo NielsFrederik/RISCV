@@ -188,12 +188,12 @@ int ALU(CPU_t* CPU, int testvalue){
 			}
 			break;
 		case 0b1100111: //jalr
-			CPU->regs[rd]	=CPU->pc+1;
-			CPU->pc 		=CPU->regs[rs1]+(imm_I/4)-1;
+			CPU->regs[rd]	=(CPU->pc+1)*4;
+			CPU->pc 		=CPU->regs[rs1]/4+(imm_I/4)-1;
 			break;
 
 		case 0b1101111: //jal
-			CPU->regs[rd] = CPU->pc+1;
+			CPU->regs[rd] = (CPU->pc+1)*4;
 			CPU->pc		  = CPU->pc+(imm_UJ/4)-1;
 			break;
 
