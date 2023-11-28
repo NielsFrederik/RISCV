@@ -71,18 +71,18 @@ int main() {
 	}
 	int runner =1;
 	while(runner){
-	printf("After instruction:%d \n", CPU.pc);
+	//printf("After instruction:%d \n", CPU.pc);
 	if (CPU.pc>=0 && CPU.pc<myFile.size)
 		runner=ALU(&CPU, myFile.data[CPU.pc]);
 	else{
 		printf("index out of bounds bro %d", CPU.pc);
 		return 0;
 	}
-	for(int i=0; i < 32; i++){
-		printf("Reg%d %08x\n", i , CPU.regs[i]);
-		}
+
+
 	CPU.pc+=1;
 	}
-
+	for(int i=0; i < 32; i++)
+			printf("Reg%d %08x\n", i , CPU.regs[i]);
     return 0;
 }
