@@ -1,10 +1,4 @@
-/*
- * ALU.c
- *
- *  Created on: 13. nov. 2023
- *      Author: oscar
- */
-#include "Typedef2.h"
+#include "CPUtype.h"
 #include "ALU.h"
 #include "stdio.h"
 
@@ -20,7 +14,7 @@ int ALU(CPU_t* CPU, int testvalue){
 	int rs2 = (inst >> 20) & 0b11111;
 
 	int imm_I = (inst >> 20);
-	int imm_S = (signed int)((inst >>25)&0b11111111111111111111111111100000)|(unsigned int)((inst&0b00000000000000000000111110000000)>>7);
+	int imm_S = (signed int)((inst >>20)&0b11111111111111111111111111100000)|(unsigned int)((inst&0b00000000000000000000111110000000)>>7);
 	//int imm_B = ((inst & 0x80000000) >> 19) | ((inst & 0x80) << 4) | ((inst >> 20) & 0x7e0) | ((inst >> 7 ) & 0x1e) ;
 	//int imm_J = ((inst & 0x80000000) >> 11) | ((inst & 0xff000)) | ((inst >> 9) & 0x800) | ((inst >> 20 ) & 0x7f3) ;
 	int imm_U = (inst & 0b11111111111111111111000000000000);
@@ -35,13 +29,19 @@ int ALU(CPU_t* CPU, int testvalue){
 		case 0b0000011:
 			switch (funct3) {
 				case 0b000: //lb
-					CPU->regs[rd]= CPU->mem[CPU->regs[rs1]+imm_I];
+					CPU->regs[rd]= (signed int)((CPU->mem[CPU->regs[rs1]+imm_I])<<24)>>24;
 					break;
 				case 0b001: //lh
-					CPU->regs[rd]= ((CPU->mem[CPU->regs[rs1]+imm_I])<<7) + ((CPU->mem[CPU->regs[rs1]+imm_I+1]));
+					CPU->regs[rd]= ((signed int)((CPU->mem[CPU->regs[rs1]+imm_I+1])<<24)>>16) | ((CPU->mem[CPU->regs[rs1]+imm_I]));
 					break;
 				case 0b010: //lw
-					CPU->regs[rd]= ((CPU->mem[CPU->regs[rs1]+imm_I+3])<<23) + ((CPU->mem[CPU->regs[rs1]+imm_I+2])<<15)+((CPU->mem[CPU->regs[rs1]+imm_I+1])<<7) + (CPU->mem[CPU->regs[rs1]+imm_I+0]);
+					CPU->regs[rd]= ((CPU->mem[CPU->regs[rs1]+imm_I+3])<<24) + ((CPU->mem[CPU->regs[rs1]+imm_I+2])<<16)+((CPU->mem[CPU->regs[rs1]+imm_I+1])<<8) + (CPU->mem[CPU->regs[rs1]+imm_I+0]);
+					break;
+				case 0b100: //lbu
+					CPU->regs[rd]= CPU->mem[CPU->regs[rs1]+imm_I];
+					break;
+				case 0b101: //lhu
+					CPU->regs[rd]= ((CPU->mem[CPU->regs[rs1]+imm_I+1])<<8) | ((CPU->mem[CPU->regs[rs1]+imm_I]));
 			}
 			break;
 		case 0b0010011: //Opcode
@@ -49,7 +49,7 @@ int ALU(CPU_t* CPU, int testvalue){
 				case 0: //addi
 					CPU->regs[rd] = CPU->regs[rs1] + imm_I;
 					break;
-				case 1: //slii
+				case 1: //slli
 					CPU->regs[rd] = CPU->regs[rs1]<< imm_I;
 					break;
 				case 2:
@@ -91,7 +91,6 @@ int ALU(CPU_t* CPU, int testvalue){
 					CPU->regs[rd] = CPU->regs[rs1] & imm_I;
 					break;
 				default:
-					//printf("du grim");
 					break;
 
 		}
@@ -105,7 +104,7 @@ int ALU(CPU_t* CPU, int testvalue){
 					break;
 				case 0b001://sh
 					CPU->mem[CPU->regs[rs1]+imm_S]=CPU->regs[rs2]&  0b00000000000000000000000011111111;
-					CPU->mem[CPU->regs[rs1]+imm_S+1]=CPU->regs[rs2]&0b00000000000000001111111100000000;
+					CPU->mem[CPU->regs[rs1]+imm_S+1]=(CPU->regs[rs2]&0b00000000000000001111111100000000)>>8;
 					break;
 				case 0b010://sw
 					CPU->mem[CPU->regs[rs1]+imm_S]=CPU->regs[rs2]&  0b00000000000000000000000011111111;
@@ -120,7 +119,7 @@ int ALU(CPU_t* CPU, int testvalue){
 				case 0:
 					//add & sub
 					switch(funct7){
-						case 0: //
+						case 0: //add
 							CPU->regs[rd] = CPU->regs[rs1] + CPU->regs[rs2];
 							break;
 						case 0b0100000:
@@ -135,11 +134,11 @@ int ALU(CPU_t* CPU, int testvalue){
 
 				case 0b010:
 					//slt
-					CPU->regs[rd] = (CPU->regs[rs1]<CPU->regs[rs2])? 1:0;
+					CPU->regs[rd] = (CPU->regs[rs1]<CPU->regs[rs2])? 1:0; //de kan da ikke være det samme
 					break;
 				case 0b011:
 					//sltu
-					CPU->regs[rd] = (CPU->regs[rs1]) < (CPU->regs[rs2]) ? 1:0;
+					CPU->regs[rd] = (CPU->regs[rs1]) < (CPU->regs[rs2]) ? 1:0; //her
 					break;
 				case 0b100:
 					//xor
@@ -175,8 +174,6 @@ int ALU(CPU_t* CPU, int testvalue){
 					CPU->pc = CPU->regs[rs1] != CPU->regs[rs2]? CPU->pc+(imm_SB/4)-1 : CPU->pc;
 					break;
 				case 0b100: //blt
-					if((signed int)CPU->regs[rs1] >= (signed int)CPU->regs[rs2] )
-						printf("u exit branching");
 					CPU->pc = (signed int)CPU->regs[rs1] < (signed int)CPU->regs[rs2]? CPU->pc+(imm_SB/4)-1 : CPU->pc;
 					break;
 				case 0b101: //bge
@@ -191,13 +188,12 @@ int ALU(CPU_t* CPU, int testvalue){
 			}
 			break;
 		case 0b1100111: //jalr
-			printf("jalrjalrjalrjalrjalrjalrjalr \n");
-			CPU->regs[rd]	=CPU->pc+1;
-			CPU->pc 		=CPU->regs[rs1]+(imm_I/4)-1;
+			CPU->regs[rd]	=(CPU->pc+1)*4;
+			CPU->pc 		=CPU->regs[rs1]/4+(imm_I/4)-1;
 			break;
 
 		case 0b1101111: //jal
-			CPU->regs[rd] = CPU->pc+1;
+			CPU->regs[rd] = (CPU->pc+1)*4;
 			CPU->pc		  = CPU->pc+(imm_UJ/4)-1;
 			break;
 

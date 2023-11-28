@@ -1,10 +1,3 @@
-/*
- * ALU.h
- *
- *  Created on: 13. nov. 2023
- *      Author: oscar
- */
-
 #ifndef ALU_H_
 #define ALU_H_
 
