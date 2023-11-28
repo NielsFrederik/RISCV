@@ -43,8 +43,8 @@ int main( int argc, char *argv[] ) {
 
 	int runner =1; //variable to be able to stop the program incase of a ecall 10.
 	while(runner){
-	if (CPU.pc>=0 && CPU.pc<filesize){ //makes sure it is reading from inside the data array.
-		uint32_t instruction = CPU.mem[(4*CPU.pc)+0]+(CPU.mem[(4*CPU.pc)+1]<<8)+(CPU.mem[(4*CPU.pc)+2]<<16)+(CPU.mem[(4*CPU.pc)+3]<<24); //reads the instruction from the memory.
+	if (CPU.pc>=0 && CPU.pc<filesize*4){ //makes sure it is reading from inside the data array.
+		uint32_t instruction = CPU.mem[(CPU.pc)+0]+(CPU.mem[(CPU.pc)+1]<<8)+(CPU.mem[(CPU.pc)+2]<<16)+(CPU.mem[(CPU.pc)+3]<<24); //reads the instruction from the memory.
 		runner=Processor(&CPU, instruction); //the ALU takes the instruction as input.
 	}
 	else{
@@ -53,7 +53,7 @@ int main( int argc, char *argv[] ) {
 	}
 
 
-	CPU.pc+=1;
+	CPU.pc+=4;
 	}
 	for(int i=0; i < 32; i+=4){
 		for(int j=0; j<4; j++)
