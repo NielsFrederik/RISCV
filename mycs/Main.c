@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "CPUtype.h"
-#include "ALU.h"
+#include "Processor.h"
 
 
 int main( int argc, char *argv[] ) {
@@ -45,7 +45,7 @@ int main( int argc, char *argv[] ) {
 	while(runner){
 	if (CPU.pc>=0 && CPU.pc<filesize){ //makes sure it is reading from inside the data array.
 		uint32_t instruction = CPU.mem[(4*CPU.pc)+0]+(CPU.mem[(4*CPU.pc)+1]<<8)+(CPU.mem[(4*CPU.pc)+2]<<16)+(CPU.mem[(4*CPU.pc)+3]<<24); //reads the instruction from the memory.
-		runner=ALU(&CPU, instruction); //the ALU takes the instruction as input.
+		runner=Processor(&CPU, instruction); //the ALU takes the instruction as input.
 	}
 	else{
 		printf("index out of bounds %d", CPU.pc); //if the program counter is outside the valid area the program stops.

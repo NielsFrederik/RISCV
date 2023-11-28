@@ -1,28 +1,27 @@
 #include "CPUtype.h"
-#include "ALU.h"
+#include "Processor.h"
 #include "stdio.h"
 
-int ALU(CPU_t* CPU, int testvalue){
+int Processor(CPU_t* CPU, int instruction){
 
 	CPU->regs[0] = 0;
-	int inst = testvalue;
+	int inst = instruction;
 
 	int opcode = inst & 0b1111111;
-	int rd = (inst >> 7) & 0b11111;
 
 	int rs1 = (inst >> 15) & 0b11111;
 	int rs2 = (inst >> 20) & 0b11111;
 
+	int rd = (inst >> 7) & 0b11111;
+
 	int imm_I = (inst >> 20);
 	int imm_S = (signed int)((inst >>20)&0b11111111111111111111111111100000)|(unsigned int)((inst&0b00000000000000000000111110000000)>>7);
-	//int imm_B = ((inst & 0x80000000) >> 19) | ((inst & 0x80) << 4) | ((inst >> 20) & 0x7e0) | ((inst >> 7 ) & 0x1e) ;
-	//int imm_J = ((inst & 0x80000000) >> 11) | ((inst & 0xff000)) | ((inst >> 9) & 0x800) | ((inst >> 20 ) & 0x7f3) ;
 	int imm_U = (inst & 0b11111111111111111111000000000000);
 	int imm_UJ= ((signed int)(inst&0b10000000000000000000000000000000)>>15)|(signed int)((inst&0b01111111111000000000000000000000)>>20)|(signed int)((inst&0b00000000000100000000000000000000)>>9)|(signed int)((inst&0b000000000000111111110000000000));
 	int imm_SB = (((signed int)(inst&0b10000000000000000000000000000000)>>19)+((unsigned int)(inst&0b01111110000000000000000000000000)>>20)+((unsigned int)(inst&0b00000000000000000000111100000000)>>7)+((unsigned int)(inst&0b00000000000000000000000010000000)<<4));
 
-	int funct3 = (inst >> 12) & 0x7 ;
-	int funct7 = (inst >> 25) & 0x7f;
+	int funct3 = (inst >> 12) & 0b111 ;
+	int funct7 = (inst >> 25) & 0b1111111;
 
 
 	switch (opcode) {
