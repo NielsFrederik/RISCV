@@ -167,33 +167,33 @@ int Processor(CPU_t* CPU, int instruction){
 		case 0b1100011:
 			switch(funct3){
 				case 0b000: //beq
-					CPU->pc = CPU->regs[rs1] == CPU->regs[rs2]? CPU->pc+(imm_SB/4)-1 : CPU->pc;
+					CPU->pc = CPU->regs[rs1] == CPU->regs[rs2]? CPU->pc+imm_SB-4 : CPU->pc;
 					break;
 				case 0b001: //bne
-					CPU->pc = CPU->regs[rs1] != CPU->regs[rs2]? CPU->pc+(imm_SB/4)-1 : CPU->pc;
+					CPU->pc = CPU->regs[rs1] != CPU->regs[rs2]? CPU->pc+imm_SB-4 : CPU->pc;
 					break;
 				case 0b100: //blt
-					CPU->pc = (signed int)CPU->regs[rs1] < (signed int)CPU->regs[rs2]? CPU->pc+(imm_SB/4)-1 : CPU->pc;
+					CPU->pc = (signed int)CPU->regs[rs1] < (signed int)CPU->regs[rs2]? CPU->pc+imm_SB-4 : CPU->pc;
 					break;
 				case 0b101: //bge
-					CPU->pc = (signed int)CPU->regs[rs1] >= (signed int)CPU->regs[rs2]? CPU->pc+(imm_SB/4)-1 : CPU->pc;
+					CPU->pc = (signed int)CPU->regs[rs1] >= (signed int)CPU->regs[rs2]? CPU->pc+imm_SB-4 : CPU->pc;
 					break;
 				case 0b110: //bltu
-					CPU->pc = (unsigned int)CPU->regs[rs1] < (unsigned int)CPU->regs[rs2]? CPU->pc+(imm_SB/4)-1 : CPU->pc;
+					CPU->pc = (unsigned int)CPU->regs[rs1] < (unsigned int)CPU->regs[rs2]? CPU->pc+imm_SB-4 : CPU->pc;
 					break;
 				case 0b111: //bgeu
-					CPU->pc = (unsigned int)CPU->regs[rs1] >= (unsigned int)CPU->regs[rs2]? CPU->pc+(imm_SB/4)-1 : CPU->pc;
+					CPU->pc = (unsigned int)CPU->regs[rs1] >= (unsigned int)CPU->regs[rs2]? CPU->pc+imm_SB-4 : CPU->pc;
 					break;
 			}
 			break;
 		case 0b1100111: //jalr
-			CPU->regs[rd]	=(CPU->pc+1)*4;
-			CPU->pc 		=CPU->regs[rs1]/4+(imm_I/4)-1;
+			CPU->regs[rd]	=CPU->pc+4;
+			CPU->pc 		=CPU->regs[rs1]+imm_I-4;
 			break;
 
 		case 0b1101111: //jal
-			CPU->regs[rd] = (CPU->pc+1)*4;
-			CPU->pc		  = CPU->pc+(imm_UJ/4)-1;
+			CPU->regs[rd] = CPU->pc+4;
+			CPU->pc		  = CPU->pc+imm_UJ-4;
 			break;
 
 		case 0b1110011:
