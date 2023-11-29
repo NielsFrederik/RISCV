@@ -11,7 +11,6 @@ int main( int argc, char *argv[] ) {
 		printf("file name not supplied");
 		return -1;
 	}
-   // readFile_t myFile;
     const char* inputFilePath = argv[1]; //uses the terminal input as the filename.
 	uint32_t filesize;
 	FILE* inputFile = fopen(inputFilePath, "rb");
@@ -62,7 +61,7 @@ int main( int argc, char *argv[] ) {
 	}
 
 	//write all CPU.Regs to a file.res.
-	FILE* outputFile = fopen("file.res", "wb");
+	FILE* outputFile = fopen("outputregisters.res", "wb");
 	for(int i=0; i<32; i++){
 		uint32_t temp = CPU.regs[i];
 		uint8_t t1 = temp & 0b11111111;
